@@ -225,6 +225,10 @@ typedef const char *StrNil;
 typedef int Int;
 typedef double Number;
 typedef int Boolean;
+typedef struct {
+  const char *str;
+  const int len;
+} LenStr;
 ]]
 
 
@@ -235,6 +239,8 @@ M.define 'Str_get(var,name) lua_getfield(L,-1,name); var=lua_tostring(L,-1); lua
 M.define 'Str_geti(var,idx) lua_rawgeti(L,-1,idx); var=lua_tostring(L,-1); lua_pop(L,1)'
 
 M.define 'StrNil_init(var,idx) const char *var = lua_tostring(L,idx)'
+
+M.define 'LenStr_init(var,idx) LenStr var; var.str = luaL_checklstring(L,idx,&var.len)'
 
 M.define 'Int_init(var,idx) int var = luaL_checkinteger(L,idx)'
 M.define 'Int_inito(var,idx,val) int var = luaL_optinteger(L,idx,val)'

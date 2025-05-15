@@ -71,8 +71,11 @@ def get_encoding () {
 // @param e_out likewise
 // @param text the string
 // @function encode
-def encode(Int e_in, Int e_out, Str text) {
+def encode(Int e_in, Int e_out, LenStr str) {
   int ce = get_encoding();
+  const char* text = str.str;
+  int len = str.len;
+  int wsl = len / (e_in == -1 ? sizeof(WCHAR) : sizeof(CHAR));
   LPCWSTR ws;
   if (e_in != -1) {
     set_encoding(e_in);
@@ -82,9 +85,9 @@ def encode(Int e_in, Int e_out, Str text) {
   }
   if (e_out != -1) {
     set_encoding(e_out);
-    push_wstring(L,ws);
+    push_wstring_l(L, ws, wsl);
   } else {
-    lua_pushlstring(L,(LPCSTR)ws,wcslen(ws)*sizeof(WCHAR));
+    lua_pushlstring(L,(LPCSTR)ws,wsl);
   }
   set_encoding(ce);
   return 1;
