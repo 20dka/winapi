@@ -59,6 +59,11 @@ typedef struct {
   const char *str;
   const int len;
 } LenStr;
+static LenStr initializeLenStr(lua_State *L, int idx) {
+	LenStr ls;
+	ls.str = luaL_checklstring(L,idx,&ls.len);
+	return ls;
+}
 
 
 #line 43 "winapi.l.c"
@@ -98,10 +103,15 @@ static int l_get_encoding(lua_State *L) {
 static int l_encode(lua_State *L) {
   int e_in = luaL_checkinteger(L,1);
   int e_out = luaL_checkinteger(L,2);
-  LenStr str; str.str = luaL_checklstring(L,3,&str.len);
+  LenStr str = initializeLenStr(L,3);
   #line 74 "winapi.l.c"
   int ce = get_encoding();
   const char* text = str.str;
+  int wsl = str.len;
+
+  LPCWSTR ws;
+
+  int needs_free = 0;
 
   const char* dupeWith0000 = malloc(sizeof(char) * (str.len + 4)); // \0\0\0\0 so wcslen() works
   if (!dupeWith0000) {
@@ -110,11 +120,6 @@ static int l_encode(lua_State *L) {
   memcpy(dupeWith0000, text, sizeof(char) * (str.len + 4));
   memset(dupeWith0000 + str.len, 0, sizeof(char) * 4);
 
-  int wsl = str.len;
-  int strlen = str.len;
-
-  LPCWSTR ws;
-  int needs_free = 0;
   if (e_in != -1) {
     set_encoding(e_in);
     ws = wstring_dyn(dupeWith0000);

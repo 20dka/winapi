@@ -73,6 +73,11 @@ def get_encoding () {
 def encode(Int e_in, Int e_out, LenStr str) {
   int ce = get_encoding();
   const char* text = str.str;
+  int wsl = str.len;
+
+  LPCWSTR ws;
+
+  int needs_free = 0;
 
   const char* dupeWith0000 = malloc(sizeof(char) * (str.len + 4)); // \0\0\0\0 so wcslen() works
   if (!dupeWith0000) {
@@ -81,11 +86,6 @@ def encode(Int e_in, Int e_out, LenStr str) {
   memcpy(dupeWith0000, text, sizeof(char) * (str.len + 4));
   memset(dupeWith0000 + str.len, 0, sizeof(char) * 4);
 
-  int wsl = str.len;
-  int strlen = str.len;
-
-  LPCWSTR ws;
-  int needs_free = 0;
   if (e_in != -1) {
     set_encoding(e_in);
     ws = wstring_dyn(dupeWith0000);

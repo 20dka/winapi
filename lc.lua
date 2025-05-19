@@ -229,6 +229,11 @@ typedef struct {
   const char *str;
   const int len;
 } LenStr;
+static LenStr initializeLenStr(lua_State *L, int idx) {
+	LenStr ls;
+	ls.str = luaL_checklstring(L,idx,&ls.len);
+	return ls;
+}
 ]]
 
 
@@ -240,7 +245,7 @@ M.define 'Str_geti(var,idx) lua_rawgeti(L,-1,idx); var=lua_tostring(L,-1); lua_p
 
 M.define 'StrNil_init(var,idx) const char *var = lua_tostring(L,idx)'
 
-M.define 'LenStr_init(var,idx) LenStr var; var.str = luaL_checklstring(L,idx,&var.len)'
+M.define 'LenStr_init(var,idx) LenStr var = initializeLenStr(L,idx)'
 
 M.define 'Int_init(var,idx) int var = luaL_checkinteger(L,idx)'
 M.define 'Int_inito(var,idx,val) int var = luaL_optinteger(L,idx,val)'
