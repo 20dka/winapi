@@ -320,6 +320,31 @@ LPWSTR wstring_buff(LPCSTR text, LPWSTR wbuf, int bufsz) {
   }
 }
 
+/// convert text to UTF-16 depending on encoding.
+// @param text the input multi-byte text
+// @param wbuf the output wide char text
+// @param bufsz the size of the output buffer.
+// @return a pointer to `wbuf`
+// @function wstring_buff
+LPWSTR wstring_dyn(LPCSTR text) {
+    int byte_len = MultiByteToWideChar(
+        current_encoding, 0,
+        text, -1,
+        NULL, 0);
+    LPWSTR wbuf = malloc(byte_len * sizeof(WCHAR));
+    int res = MultiByteToWideChar(
+        current_encoding, 0,
+        text, -1,
+        wbuf, byte_len);
+    if (res != 0) {
+        return wbuf;
+    }
+    else {
+        free(wbuf);
+        return NULL; // how to indicate error, hm??
+    }
+}
+
 /// push a wide string on the Lua stack with given size.
 // This converts to the current encoding first.
 // @param L the State
@@ -327,13 +352,20 @@ LPWSTR wstring_buff(LPCSTR text, LPWSTR wbuf, int bufsz) {
 // @param len size of wide string
 // @return 1; the encoded string or 2, `nil` and the error message
 // @function push_wstring_l
-int push_wstring_l(lua_State *L, LPCWSTR us, int len) {
-  int osz = 3*len;
-  char *obuff = malloc(osz);
+int push_wstring_l(lua_State *L, LPCWSTR us, int wideCharCount) {
+  int nl = WideCharToMultiByte(
+      current_encoding, 0,
+      us, wideCharCount,
+      NULL, 0,
+      NULL, NULL);
+  char* obuff = malloc(nl);
+  if (!obuff) {
+      return push_error(L);
+  }
   int res = WideCharToMultiByte(
     current_encoding, 0,
-    us,len,
-    obuff,osz,
+    us, wideCharCount,
+    obuff,nl,
     NULL,NULL);
   if (res == 0) {
     free(obuff);

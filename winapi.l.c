@@ -66,7 +66,6 @@ def get_encoding () {
 }
 
 /// encode a string in another encoding.
-// Note: currently there's a limit of about 2K on the string buffer.
 // @param e_in `CP_ACP`, `CP_UTF8` or `CP_UTF16`
 // @param e_out likewise
 // @param text the string
@@ -74,22 +73,41 @@ def get_encoding () {
 def encode(Int e_in, Int e_out, LenStr str) {
   int ce = get_encoding();
   const char* text = str.str;
-  int len = str.len;
-  int wsl = len / (e_in == -1 ? sizeof(WCHAR) : sizeof(CHAR));
+
+  const char* dupeWith0000 = malloc(sizeof(char) * (str.len + 4)); // \0\0\0\0 so wcslen() works
+  if (!dupeWith0000) {
+      return push_error(L);
+  }
+  memcpy(dupeWith0000, text, sizeof(char) * (str.len + 4));
+  memset(dupeWith0000 + str.len, 0, sizeof(char) * 4);
+
+  int wsl = str.len;
+  int strlen = str.len;
+
   LPCWSTR ws;
+  int needs_free = 0;
   if (e_in != -1) {
     set_encoding(e_in);
-    ws = wstring(text);
+    ws = wstring_dyn(dupeWith0000);
+    if (!ws) {
+        return push_error(L);
+    }
+    needs_free = 1;
   } else {
-    ws = (LPCWSTR)text;
+    ws = (LPCWSTR)dupeWith0000;
   }
+  wsl = wcslen(ws);
   if (e_out != -1) {
     set_encoding(e_out);
     push_wstring_l(L, ws, wsl);
   } else {
-    lua_pushlstring(L,(LPCSTR)ws,wsl);
+    lua_pushlstring(L,(LPCSTR)ws,wsl * sizeof(WCHAR));
   }
   set_encoding(ce);
+  if (needs_free) {
+      free(ws);
+  }
+  free(dupeWith0000);
   return 1;
 }
 
