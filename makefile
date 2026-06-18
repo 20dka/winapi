@@ -1,4 +1,4 @@
 all: build
-	lake
+
 build:
-	build-lc
+	build-gcc-lfw
